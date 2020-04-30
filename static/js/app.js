@@ -4,6 +4,10 @@ let chatButton = $('#btn-send');
 let userList = $('#user-list');
 let messageList = $('#messages');
 
+// groups
+let groupList = $('#group-list');
+let currentGroup = '';
+
 function updateUserList() {
     $.getJSON('api/v1/user/', function (data) {
         userList.children('.user').remove();
@@ -51,16 +55,7 @@ function getMessageById(message) {
     id = JSON.parse(message).message
     group = JSON.parse(message).group
     if (group) {
-        console.log("Searching for group: " + message);
-        $.getJSON(`/api/v1/group/${id}/`, function (data) {
-            if (data.user === currentRecipient ||
-                (data.recipient === currentRecipient && data.user == currentUser)) {
-                drawMessage(data);
-            }
-            console.log(data);
-            
-            messageList.animate({ scrollTop: messageList.prop('scrollHeight') });
-        });
+        getGroupMessage(id)
     }
     else {
         $.getJSON(`/api/v1/message/${id}/`, function (data) {
@@ -101,8 +96,74 @@ function disableInput() {
     chatButton.prop('disabled', true);
 }
 
+// Group functions
+
+
+function getGroupMessage(id) {
+    console.log("Searching for group: " + message);
+    $.getJSON(`/api/v1/group/${id}/`, function (data) {
+        if (data.user === currentRecipient ||
+            (data.recipient === currentRecipient && data.user == currentUser)) {
+            drawGroupMessage(data);
+        }
+        console.log(data);
+
+        messageList.animate({ scrollTop: messageList.prop('scrollHeight') });
+    });
+}
+
+function updateGroupList() {
+    $.getJSON('api/v1/group/', function (data) {
+        console.log(data);
+        
+        groupList.children('.group').remove();
+        for (let i = 0; i < data.length; i++) {
+            const groupItem = `<a class="list-group-item group">${data[i]['name']}</a>`;
+            $(groupItem).appendTo('#group-list');
+        }
+        $('.group').click(function () {
+            userList.children('.active').removeClass('active');
+            let selected = event.target;
+            $(selected).addClass('active');
+            setCurrentGroup(selected.text);
+        });
+    });
+}
+function setCurrentGroup(name) {
+    currentGroup = name;
+    getGroupConversation(currentGroup);
+    enableInput();
+}
+function getGroupConversation(currentGroup) {
+    $.getJSON(`/api/v1/group/?target=${currentGroup}`, function (data) {
+        messageList.children('.message').remove();
+        for (let i = data['results'].length - 1; i >= 0; i--) {
+            drawGroupMessage(data['results'][i]);
+        }
+        messageList.animate({ scrollTop: messageList.prop('scrollHeight') });
+    });
+
+}
+
+function drawGroupMessage(message) {
+    let position = 'left';
+    const date = new Date(message.time);
+    if (message.sender === currentUser) position = 'right';
+    const messageItem = `
+            <li class="message ${position}">
+                <div class="avatar">${message.sender}</div>
+                    <div class="text_wrapper">
+                        <div class="text">${message.body}<br>
+                            <span class="small">${date}</span>
+                    </div>
+                </div>
+            </li>`;
+    $(messageItem).appendTo('#messages');
+}
+
 $(document).ready(function () {
     updateUserList();
+    updateGroupList() 
     disableInput();
 
     //    let socket = new WebSocket(`ws://127.0.0.1:8000/?session_key=${sessionKey}`);
@@ -133,6 +194,3 @@ $(document).ready(function () {
         getMessageById(e.data);
     };
 });
-
-
-

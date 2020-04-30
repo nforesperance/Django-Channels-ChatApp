@@ -79,17 +79,23 @@ class GroupMessageViewSet(ModelViewSet):
     authentication_classes = (CsrfExemptSessionAuthentication,)
     pagination_class = MessagePagination
 
-    # Change this soon
-    def list(self, request, *args, **kwargs):
-        target = self.request.query_params.get('target', None)
-        if target is not None:
-            self.queryset = self.queryset.filter(
-                Q(recipient=request.user, user__username=target) |
-                Q(recipient__username=target, user=request.user))
-            return super(MessageModelViewSet, self).list(request, *args, **kwargs)
-        else:
-            print("handle get without parameters")
+    # # Change this soon
+    # def list(self, request, *args, **kwargs):
+    #     print("InSIDE 00))))00000")
+    #     target = self.request.query_params.get('target', None)
+    #     if target is not None:
+    #         self.queryset = self.queryset.filter()
+    #     return super(GroupMessage, self).list(request, *args, **kwargs)
             
+    def get_queryset(self):
+        queryset = GroupMessage.objects.all()
+        target = self.request.query_params.get('target', None)
+
+        if target is not None:
+            pass
+            # queryset = queryset.filter(pks__in=target)
+
+        return queryset
     # @ POST
     # @ /api/v1/message/ 
     # @ Description: receives message to be sent, saves it and notifies users
@@ -98,7 +104,6 @@ class GroupMessageViewSet(ModelViewSet):
         return super(GroupMessage, self).create(request, *args, **kwargs)
     
     def retrieve(self, request, *args, **kwargs):
-        print("InSIDE 00))))00000")
         msg = get_object_or_404(
             self.queryset.filter(Q(pk=kwargs['pk'])))
         serializer = self.get_serializer(msg)
