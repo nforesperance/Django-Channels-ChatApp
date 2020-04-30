@@ -98,7 +98,22 @@ function disableInput() {
 
 // Group functions
 
+function updateGroupList() {
+    $.getJSON('api/v1/group/', function (data) {
 
+        groupList.children('.group').remove();
+        for (let i = 0; i < data.length; i++) {
+            const groupItem = `<a class="list-group-item group">${data[i]['name']}</a>`;
+            $(groupItem).appendTo('#group-list');
+        }
+        $('.group').click(function () {
+            groupList.children('.active').removeClass('active');
+            let selected = event.target;
+            $(selected).addClass('active');
+            setCurrentGroup(selected.text);
+        });
+    });
+}
 function getGroupMessage(id) {
     console.log("Searching for group: " + message);
     $.getJSON(`/api/v1/group/${id}/`, function (data) {
@@ -112,22 +127,6 @@ function getGroupMessage(id) {
     });
 }
 
-function updateGroupList() {
-    $.getJSON('api/v1/group/', function (data) {
-
-        groupList.children('.group').remove();
-        for (let i = 0; i < data.length; i++) {
-            const groupItem = `<a class="list-group-item group">${data[i]['name']}</a>`;
-            $(groupItem).appendTo('#group-list');
-        }
-        $('.group').click(function () {
-            userList.children('.active').removeClass('active');
-            let selected = event.target;
-            $(selected).addClass('active');
-            setCurrentGroup(selected.text);
-        });
-    });
-}
 function setCurrentGroup(name) {
     currentGroup = name;
     getGroupConversation(currentGroup);
