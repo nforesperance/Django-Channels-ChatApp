@@ -37,7 +37,7 @@ class MessageModel(Model):
         Inform client there is a new message.
         """
         notification = {
-            'type': 'recieve_group_message',
+            'type': 'chat_message',
             'message': '{}'.format(self.id)
         }
 

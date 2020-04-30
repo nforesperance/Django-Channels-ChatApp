@@ -104,6 +104,12 @@ $(document).ready(function () {
             sendMessage(currentRecipient, chatInput.val());
             chatInput.val('');
         }
+        socket.send(JSON.stringify(
+            {
+                "message":1,
+                 "group":3
+            }
+        ))
     });
 
     socket.onmessage = function (e) {
