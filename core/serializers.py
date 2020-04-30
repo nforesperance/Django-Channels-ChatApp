@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
-from core.models import MessageModel
+from core.models import MessageModel,GroupMessage
 from rest_framework.serializers import ModelSerializer, CharField
 
 
@@ -21,6 +21,10 @@ class MessageModelSerializer(ModelSerializer):
     class Meta:
         model = MessageModel
         fields = ('id', 'user', 'recipient', 'timestamp', 'body')
+class GroupMessageSerializer(ModelSerializer):
+    class Meta:
+        model = GroupMessage
+        fields = '__all__'
 
 
 class UserModelSerializer(ModelSerializer):

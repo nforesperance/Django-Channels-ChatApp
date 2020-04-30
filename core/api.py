@@ -7,8 +7,8 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.authentication import SessionAuthentication
 
 from chat import settings
-from core.serializers import MessageModelSerializer, UserModelSerializer
-from core.models import MessageModel
+from core.serializers import MessageModelSerializer, UserModelSerializer,GroupMessageSerializer
+from core.models import MessageModel,GroupMessage
 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
@@ -72,3 +72,34 @@ class UserModelViewSet(ModelViewSet):
         # Get all users except yourself
         self.queryset = self.queryset.exclude(id=request.user.id)
         return super(UserModelViewSet, self).list(request, *args, **kwargs)
+class GroupMessageViewSet(ModelViewSet):
+    queryset = GroupMessage.objects.all()
+    serializer_class = GroupMessageSerializer
+    allowed_methods = ('GET', 'POST', 'HEAD', 'OPTIONS')
+    authentication_classes = (CsrfExemptSessionAuthentication,)
+    pagination_class = MessagePagination
+
+    # Change this soon
+    def list(self, request, *args, **kwargs):
+        target = self.request.query_params.get('target', None)
+        if target is not None:
+            self.queryset = self.queryset.filter(
+                Q(recipient=request.user, user__username=target) |
+                Q(recipient__username=target, user=request.user))
+            return super(MessageModelViewSet, self).list(request, *args, **kwargs)
+        else:
+            print("handle get without parameters")
+            
+    # @ POST
+    # @ /api/v1/message/ 
+    # @ Description: receives message to be sent, saves it and notifies users
+    def create(self, request, *args, **kwargs):
+        self.serializer_class(data=request.data)
+        return super(GroupMessage, self).create(request, *args, **kwargs)
+    
+    def retrieve(self, request, *args, **kwargs):
+        print("InSIDE 00))))00000")
+        msg = get_object_or_404(
+            self.queryset.filter(Q(pk=kwargs['pk'])))
+        serializer = self.get_serializer(msg)
+        return Response(serializer.data)

@@ -42,20 +42,36 @@ function getConversation(recipient) {
         for (let i = data['results'].length - 1; i >= 0; i--) {
             drawMessage(data['results'][i]);
         }
-        messageList.animate({scrollTop: messageList.prop('scrollHeight')});
+        messageList.animate({ scrollTop: messageList.prop('scrollHeight') });
     });
 
 }
 
 function getMessageById(message) {
     id = JSON.parse(message).message
-    $.getJSON(`/api/v1/message/${id}/`, function (data) {
-        if (data.user === currentRecipient ||
-            (data.recipient === currentRecipient && data.user == currentUser)) {
-            drawMessage(data);
-        }
-        messageList.animate({scrollTop: messageList.prop('scrollHeight')});
-    });
+    group = JSON.parse(message).group
+    if (group) {
+        console.log("Searching for group: " + message);
+        $.getJSON(`/api/v1/group/${id}/`, function (data) {
+            if (data.user === currentRecipient ||
+                (data.recipient === currentRecipient && data.user == currentUser)) {
+                drawMessage(data);
+            }
+            console.log(data);
+            
+            messageList.animate({ scrollTop: messageList.prop('scrollHeight') });
+        });
+    }
+    else {
+        $.getJSON(`/api/v1/message/${id}/`, function (data) {
+            if (data.user === currentRecipient ||
+                (data.recipient === currentRecipient && data.user == currentUser)) {
+                drawMessage(data);
+            }
+            messageList.animate({ scrollTop: messageList.prop('scrollHeight') });
+        });
+    }
+
 }
 
 function sendMessage(recipient, body) {
@@ -89,7 +105,7 @@ $(document).ready(function () {
     updateUserList();
     disableInput();
 
-//    let socket = new WebSocket(`ws://127.0.0.1:8000/?session_key=${sessionKey}`);
+    //    let socket = new WebSocket(`ws://127.0.0.1:8000/?session_key=${sessionKey}`);
     var socket = new WebSocket(
         'ws://' + window.location.host +
         '/ws?session_key=${sessionKey}')
@@ -106,9 +122,9 @@ $(document).ready(function () {
         }
         socket.send(JSON.stringify(
             {
-                "message":"Hello there!",
-                 "group":3,
-                 "sender":currentRecipient
+                "message": "Hello there!",
+                "group": 4,
+                "sender": currentRecipient
             }
         ))
     });
