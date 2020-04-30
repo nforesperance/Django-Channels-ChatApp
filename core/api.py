@@ -89,8 +89,16 @@ class GroupMessageViewSet(ModelViewSet):
     # @ /api/v1/message/ 
     # @ Description: receives message to be sent, saves it and notifies users
     def create(self, request, *args, **kwargs):
-        self.serializer_class(data=request.data)
-        return super(GroupMessage, self).create(request, *args, **kwargs)
+        group = request.data['group']
+        body = request.data['body']
+        sender = request.user
+        group = get_object_or_404(
+            Group, name=group)
+        msg = GroupMessage(sender=sender,
+                           body=body,
+                           group=group)
+        msg.save()
+        return Response({"message":"succes"})
     
     def retrieve(self, request, *args, **kwargs):
         msg = get_object_or_404(

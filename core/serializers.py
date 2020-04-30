@@ -23,6 +23,7 @@ class MessageModelSerializer(ModelSerializer):
         fields = ('id', 'user', 'recipient', 'timestamp', 'body')
 class GroupMessageSerializer(ModelSerializer):
     sender = CharField(source='sender.username', read_only=True)
+    group = CharField(source='group.name', read_only=True)
     class Meta:
         model = GroupMessage
         fields = '__all__'

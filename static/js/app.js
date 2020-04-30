@@ -1,3 +1,4 @@
+let groupActive = false; // is used to dtermine wheather to sumit as chat or to a group
 let currentRecipient = '';
 let chatInput = $('#chat-input');
 let chatButton = $('#btn-send');
@@ -16,7 +17,9 @@ function updateUserList() {
             $(userItem).appendTo('#user-list');
         }
         $('.user').click(function () {
+            groupActive = false
             userList.children('.active').removeClass('active');
+            groupList.children('.active').removeClass('active');
             let selected = event.target;
             $(selected).addClass('active');
             setCurrentRecipient(selected.text);
@@ -52,21 +55,13 @@ function getConversation(recipient) {
 }
 
 function getMessageById(message) {
-    id = JSON.parse(message).message
-    group = JSON.parse(message).group
-    if (group) {
-        getGroupMessage(id)
-    }
-    else {
-        $.getJSON(`/api/v1/message/${id}/`, function (data) {
-            if (data.user === currentRecipient ||
-                (data.recipient === currentRecipient && data.user == currentUser)) {
-                drawMessage(data);
-            }
-            messageList.animate({ scrollTop: messageList.prop('scrollHeight') });
-        });
-    }
-
+    $.getJSON(`/api/v1/message/${id}/`, function (data) {
+        if (data.user === currentRecipient ||
+            (data.recipient === currentRecipient && data.user == currentUser)) {
+            drawMessage(data);
+        }
+        messageList.animate({ scrollTop: messageList.prop('scrollHeight') });
+    });
 }
 
 function sendMessage(recipient, body) {
@@ -107,7 +102,9 @@ function updateGroupList() {
             $(groupItem).appendTo('#group-list');
         }
         $('.group').click(function () {
+            groupActive = true
             groupList.children('.active').removeClass('active');
+            userList.children('.active').removeClass('active');
             let selected = event.target;
             $(selected).addClass('active');
             setCurrentGroup(selected.text);
@@ -115,13 +112,12 @@ function updateGroupList() {
     });
 }
 function getGroupMessage(id) {
-    console.log("Searching for group: " + message);
-    $.getJSON(`/api/v1/group/${id}/`, function (data) {
-        if (data.user === currentRecipient ||
-            (data.recipient === currentRecipient && data.user == currentUser)) {
+    $.getJSON(`/api/v1/group/message/${id}/`, function (data) {
+
+        if (currentGroup === data.group) {
             drawGroupMessage(data);
+
         }
-        console.log(data);
 
         messageList.animate({ scrollTop: messageList.prop('scrollHeight') });
     });
@@ -144,8 +140,6 @@ function getGroupConversation(currentGroup) {
 }
 
 function drawGroupMessage(message) {
-    console.log(message);
-    
     let position = 'left';
     const date = new Date(message.time);
     if (message.sender == currentUser) {
@@ -165,6 +159,16 @@ function drawGroupMessage(message) {
     $(messageItem).appendTo('#messages');
 }
 
+function sendGroupMessage(group, body) {
+    $.post('/api/v1/group/message/', {
+        group: group,
+        body: body
+    })
+        .fail(function () {
+            alert('Error! Check console!');
+        });
+}
+
 $(document).ready(function () {
     updateUserList();
     updateGroupList()
@@ -181,20 +185,31 @@ $(document).ready(function () {
     });
 
     chatButton.click(function () {
-        if (chatInput.val().length > 0) {
-            sendMessage(currentRecipient, chatInput.val());
-            chatInput.val('');
+        // Sending message to a group
+        if (groupActive) {
+            if (chatInput.val().length > 0) {
+                sendGroupMessage(currentGroup, chatInput.val());
+                chatInput.val('');
+            }
         }
-        // socket.send(JSON.stringify(
-        //     {
-        //         "message": "Hello there!",
-        //         "group": 4,
-        //         "sender": currentRecipient
-        //     }
-        // ))
+        //sending message to a chat
+        else {
+            if (chatInput.val().length > 0) {
+                sendMessage(currentRecipient, chatInput.val());
+                chatInput.val('');
+            }
+        }
     });
 
     socket.onmessage = function (e) {
-        getMessageById(e.data);
+        message = e.data
+        id = JSON.parse(message).message
+        group = JSON.parse(message).group
+        if (group) {
+            getGroupMessage(id)
+        }
+        else {
+            getMessageById(e.data);
+        }
     };
 });

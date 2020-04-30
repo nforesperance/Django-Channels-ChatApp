@@ -59,7 +59,6 @@ class SyncChatConsumer(WebsocketConsumer):
         self.group_name = "{}".format(user_id)
 
         # Join room group
-        print("User: "+str(self.group_name))
         async_to_sync(self.channel_layer.group_add)(
             self.group_name,
             self.channel_name
@@ -68,7 +67,6 @@ class SyncChatConsumer(WebsocketConsumer):
         for group in groups:
             if group.has(int(self.group_name)):
                 group_id = "group"+str(group.id)
-                print(group_id)
                 async_to_sync(self.channel_layer.group_add)(
                     group_id,
                     self.channel_name
