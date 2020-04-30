@@ -144,9 +144,11 @@ function getGroupConversation(currentGroup) {
 }
 
 function drawGroupMessage(message) {
+    console.log(message);
+    
     let position = 'left';
     const date = new Date(message.time);
-    if (message.sender == currentUserId) {
+    if (message.sender == currentUser) {
         position = 'right';
 
     }

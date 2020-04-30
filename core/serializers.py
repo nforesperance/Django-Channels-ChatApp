@@ -22,6 +22,7 @@ class MessageModelSerializer(ModelSerializer):
         model = MessageModel
         fields = ('id', 'user', 'recipient', 'timestamp', 'body')
 class GroupMessageSerializer(ModelSerializer):
+    sender = CharField(source='sender.username', read_only=True)
     class Meta:
         model = GroupMessage
         fields = '__all__'
@@ -34,4 +35,4 @@ class UserModelSerializer(ModelSerializer):
 class GroupSerializer(ModelSerializer):
     class Meta:
         model = Group
-        fields = ('name',)
+        fields = '__all__'
