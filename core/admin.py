@@ -11,7 +11,7 @@ class MessageModelAdmin(ModelAdmin):
     list_filter = ('user', 'recipient')
     date_hierarchy = 'timestamp'
 class GroupAdmin(ModelAdmin):
-    readonly_fields = ('members',)
+    readonly_fields = ('members','messages',)
     search_fields = ('id', 'name',)
     list_display = ('id', 'name',)
     list_display_links = ('id','name',)

@@ -68,7 +68,8 @@ class MessageModel(Model):
 
 class Group(models.Model):
     name = models.CharField(max_length = 20)
-    members = models.CharField(max_length = 255)
+    members = models.TextField()
+    messages = models.TextField ()
     
     def set_members(self,user_id_list):
         self.members = json.dumps(user_id_list)
@@ -92,9 +93,30 @@ class Group(models.Model):
     def has(self,user_id):
         current_list = self.get_members()
         return(user_id in current_list)
+    
+    # Set of functions for dealing with group messages
+
+    def set_messages(self,message_id_list):
+        self.messages = json.dumps(message_id_list)
+    def get_messages(self):
+        return json.loads(self.messages)
+    def add_message(self,message_id):
+        current_list = self.get_messages()
+        new_list = current_list.append(message_id)
+        self.set_messages(new_list)
+        
+    def delete_message(self,message_id):
+        current_list = self.get_messages()
+        if message_id in current_list:
+            new_list = current_list.remove(message_id)
+            self.set_messages(new_list)
+
+
     def save(self, *args, **kwargs): 
         if self.pk is None or self.members is None or self.members == '':
             self.set_members([])
+        if self.pk is None or self.messages is None or self.messages == '':
+            self.add_message(0)
         super(Group, self).save(*args, **kwargs)
     # Meta
     class Meta:
