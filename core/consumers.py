@@ -5,7 +5,9 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 import json
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
-from .models import Group
+from .models import Group,MessageModel,GroupMessage
+from django.shortcuts import get_object_or_404
+from django.contrib.auth.models import User
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -85,18 +87,30 @@ class SyncChatConsumer(WebsocketConsumer):
     # Receive message from WebSocket
     def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        message = text_data_json['message']
+        body = text_data_json['message']
+        sender = text_data_json['sender']
         key = text_data_json['group']
-        group_id = "group"+str(key)
 
+        # creat a new message and save
+        group = get_object_or_404(
+            Group, id=int(key))
+        sender = get_object_or_404(
+            User, username = str(sender))
+        msg = GroupMessage(sender=sender,
+                           body=body,
+                           group=group)
+        msg.save()
+         
+
+        group_id = "group"+str(key)
         # Send message to room group
-        async_to_sync(self.channel_layer.group_send)(
-            group_id,
-            {
-                'type': 'chat_message',
-                'message': message
-            }
-        )
+        # async_to_sync(self.channel_layer.group_send)(
+        #     group_id,
+        #     {
+        #         'type': 'chat_message',
+        #         'message': msg.id
+        #     }
+        # )
 
     # Receive message from room group
     def chat_message(self, event):
@@ -104,5 +118,14 @@ class SyncChatConsumer(WebsocketConsumer):
 
         # Send message to WebSocket
         self.send(text_data=json.dumps({
-            'message': message
+            'message': message,
+            'group':False
+        }))
+    # Receive message from groups
+    def group_message(self, event):
+        group = event['group']
+        # Send message to WebSocket
+        self.send(text_data=json.dumps({
+            'message': group,
+            'group':True
         }))

@@ -106,8 +106,9 @@ $(document).ready(function () {
         }
         socket.send(JSON.stringify(
             {
-                "message":1,
-                 "group":3
+                "message":"Hello there!",
+                 "group":3,
+                 "sender":currentRecipient
             }
         ))
     });

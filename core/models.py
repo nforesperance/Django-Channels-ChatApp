@@ -116,11 +116,69 @@ class Group(models.Model):
         if self.pk is None or self.members is None or self.members == '':
             self.set_members([])
         if self.pk is None or self.messages is None or self.messages == '':
-            self.add_message(0)
+            self.set_messages([])
         super(Group, self).save(*args, **kwargs)
+    def __str__(self):
+        return self.name+" ID: "+str(self.id)
     # Meta
     class Meta:
         app_label = 'core'
         verbose_name = 'Group'
         verbose_name_plural = 'Groups'
         ordering = ('name',)
+
+class GroupMessage(Model):
+    """
+    This class represents a chat message. It has a owner (user), timestamp and
+    the message body.
+
+    """
+    sender = ForeignKey(User, on_delete=CASCADE, verbose_name='sender',
+                      related_name='from_sender', db_index=True)
+    group = ForeignKey(Group, on_delete=CASCADE, verbose_name='group',
+                           related_name='to_group', db_index=True)
+    time = DateTimeField('time', auto_now_add=True, editable=False,
+                              db_index=True)
+    body = TextField('body')
+
+    def __str__(self):
+        return str(self.id)
+
+    def characters(self):
+        """
+        Toy function to count body characters.
+        :return: body's char number
+        """
+        return len(self.body)
+
+    def notify_ws_clients(self):
+        """
+        Inform client there is a new message.
+        """
+        notification = {
+            'type': 'group_message',
+            'group': '{}'.format(self.id)
+        }
+
+        channel_layer = get_channel_layer()
+        group_id = "group"+str(self.group.id)
+        print("group.id {}".format(group_id))
+        async_to_sync(channel_layer.group_send)(group_id, notification)
+
+    def save(self, *args, **kwargs):
+        """
+        Trims white spaces, saves the message and notifies the recipient via WS
+        if the message is new.
+        """
+        new = self.id
+        self.body = self.body.strip()  # Trimming whitespaces from the body
+        super(GroupMessage, self).save(*args, **kwargs)
+        if new is None:
+            self.notify_ws_clients()
+
+    # Meta
+    class Meta:
+        app_label = 'core'
+        verbose_name = 'group message'
+        verbose_name_plural = 'group messags'
+        ordering = ('-time',)
