@@ -94,7 +94,7 @@ function disableInput() {
 // Group functions
 
 function updateGroupList() {
-    $.getJSON('api/v1/group/', function (data) {
+    $.getJSON(`api/v1/group/?target=${currentUser}`, function (data) {
 
         groupList.children('.group').remove();
         for (let i = 0; i < data.length; i++) {

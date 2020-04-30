@@ -113,4 +113,10 @@ class GroupViewSet(ModelViewSet):
     pagination_class = None  # Get all user
 
     def list(self, request, *args, **kwargs):
+        target = self.request.query_params.get('target', None)
+        print(target)
+        if target is not None:
+            groups = Group.objects.all()
+            user = User.objects.get(username=target)
+            self.queryset = [x for x in groups if x.has(user.id)]
         return super(GroupViewSet, self).list(request, *args, **kwargs)
