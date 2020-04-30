@@ -37,14 +37,21 @@ class MessageModelViewSet(ModelViewSet):
     pagination_class = MessagePagination
 
     def list(self, request, *args, **kwargs):
-        self.queryset = self.queryset.filter(Q(recipient=request.user) |
-                                             Q(user=request.user))
         target = self.request.query_params.get('target', None)
         if target is not None:
             self.queryset = self.queryset.filter(
                 Q(recipient=request.user, user__username=target) |
                 Q(recipient__username=target, user=request.user))
-        return super(MessageModelViewSet, self).list(request, *args, **kwargs)
+            return super(MessageModelViewSet, self).list(request, *args, **kwargs)
+        else:
+            print("handle get without parameters")
+            
+    # @ POST
+    # @ /api/v1/message/ 
+    # @ Description: receives message to be sent, saves it and notifies users
+    def create(self, request, *args, **kwargs):
+        self.serializer_class(data=request.data)
+        return super(MessageModelViewSet, self).create(request, *args, **kwargs)
 
     def retrieve(self, request, *args, **kwargs):
         msg = get_object_or_404(
