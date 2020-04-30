@@ -114,8 +114,7 @@ function getGroupMessage(id) {
 
 function updateGroupList() {
     $.getJSON('api/v1/group/', function (data) {
-        console.log(data);
-        
+
         groupList.children('.group').remove();
         for (let i = 0; i < data.length; i++) {
             const groupItem = `<a class="list-group-item group">${data[i]['name']}</a>`;
@@ -135,7 +134,7 @@ function setCurrentGroup(name) {
     enableInput();
 }
 function getGroupConversation(currentGroup) {
-    $.getJSON(`/api/v1/group/?target=${currentGroup}`, function (data) {
+    $.getJSON(`/api/v1/group/message/?target=${currentGroup}`, function (data) {
         messageList.children('.message').remove();
         for (let i = data['results'].length - 1; i >= 0; i--) {
             drawGroupMessage(data['results'][i]);
@@ -148,7 +147,11 @@ function getGroupConversation(currentGroup) {
 function drawGroupMessage(message) {
     let position = 'left';
     const date = new Date(message.time);
-    if (message.sender === currentUser) position = 'right';
+    if (message.sender == currentUserId) {
+        position = 'right';
+
+    }
+
     const messageItem = `
             <li class="message ${position}">
                 <div class="avatar">${message.sender}</div>
@@ -163,7 +166,7 @@ function drawGroupMessage(message) {
 
 $(document).ready(function () {
     updateUserList();
-    updateGroupList() 
+    updateGroupList()
     disableInput();
 
     //    let socket = new WebSocket(`ws://127.0.0.1:8000/?session_key=${sessionKey}`);
@@ -181,13 +184,13 @@ $(document).ready(function () {
             sendMessage(currentRecipient, chatInput.val());
             chatInput.val('');
         }
-        socket.send(JSON.stringify(
-            {
-                "message": "Hello there!",
-                "group": 4,
-                "sender": currentRecipient
-            }
-        ))
+        // socket.send(JSON.stringify(
+        //     {
+        //         "message": "Hello there!",
+        //         "group": 4,
+        //         "sender": currentRecipient
+        //     }
+        // ))
     });
 
     socket.onmessage = function (e) {

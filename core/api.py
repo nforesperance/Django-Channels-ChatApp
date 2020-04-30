@@ -7,8 +7,8 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.authentication import SessionAuthentication
 
 from chat import settings
-from core.serializers import MessageModelSerializer, UserModelSerializer,GroupMessageSerializer
-from core.models import MessageModel,GroupMessage
+from core.serializers import MessageModelSerializer, UserModelSerializer,GroupMessageSerializer,GroupSerializer
+from core.models import MessageModel,GroupMessage,Group
 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
@@ -80,22 +80,11 @@ class GroupMessageViewSet(ModelViewSet):
     pagination_class = MessagePagination
 
     # # Change this soon
-    # def list(self, request, *args, **kwargs):
-    #     print("InSIDE 00))))00000")
-    #     target = self.request.query_params.get('target', None)
-    #     if target is not None:
-    #         self.queryset = self.queryset.filter()
-    #     return super(GroupMessage, self).list(request, *args, **kwargs)
-            
-    def get_queryset(self):
-        queryset = GroupMessage.objects.all()
+    def list(self, request, *args, **kwargs):
         target = self.request.query_params.get('target', None)
-
         if target is not None:
-            pass
-            # queryset = queryset.filter(pks__in=target)
-
-        return queryset
+            self.queryset = self.queryset.filter(group__name=target)
+        return super(GroupMessageViewSet, self).list(request, *args, **kwargs)
     # @ POST
     # @ /api/v1/message/ 
     # @ Description: receives message to be sent, saves it and notifies users
@@ -108,3 +97,12 @@ class GroupMessageViewSet(ModelViewSet):
             self.queryset.filter(Q(pk=kwargs['pk'])))
         serializer = self.get_serializer(msg)
         return Response(serializer.data)
+
+class GroupViewSet(ModelViewSet):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+    allowed_methods = ('GET', 'HEAD', 'OPTIONS')
+    pagination_class = None  # Get all user
+
+    def list(self, request, *args, **kwargs):
+        return super(GroupViewSet, self).list(request, *args, **kwargs)

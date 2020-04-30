@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
-from core.models import MessageModel,GroupMessage
+from core.models import MessageModel,GroupMessage,Group
 from rest_framework.serializers import ModelSerializer, CharField
 
 
@@ -31,3 +31,7 @@ class UserModelSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = ('username',)
+class GroupSerializer(ModelSerializer):
+    class Meta:
+        model = Group
+        fields = ('name',)
